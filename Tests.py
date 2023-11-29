@@ -19,10 +19,10 @@ class Test:
         self.stop_continuous = False
         self.steps = 0
         self.parameters = {
-            "E1": 0,
-            "E2": 200,
+            "E1": -200,
+            "E2": 500,
             "Ep": 1,
-            "Gain": 0,
+            "Gain": 4,
             "Rload": 10,
             "Rtia": 0
         }
@@ -98,8 +98,8 @@ class Test:
 class Titration(Test):
     def __init__(self):
         super(Titration, self).__init__("Titration")
-        self.parameters.update({"Frequency": 25})
-        self.parameters.update({"Amplitude": 50})
+        self.parameters.update({"Frequency": 100})
+        self.parameters.update({"Amplitude": 25})
         self.parameters.update({"Concentration": 0})
 
     def run_test(self, comport, baudrate):
@@ -201,8 +201,8 @@ class CV(Test):
 class SWV(Test):
     def __init__(self):
         super(SWV, self).__init__("SWV")
-        self.parameters.update({"Frequency": 25})
-        self.parameters.update({"Amplitude": 50})
+        self.parameters.update({"Frequency": 100})
+        self.parameters.update({"Amplitude": 25})
         self.parameters.update({"RunTime": 10})
 
 

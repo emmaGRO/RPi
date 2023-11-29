@@ -140,7 +140,6 @@ def extract_gains(voltages: list[float], currents:list[float]) -> dict:
         dt = temp
         count += 1
 
-    print("BUMP", bump_start, " ", bump_end)
     #################################### create baseline by adding values between start and end of bump#####################################################
 
     win_length = 21

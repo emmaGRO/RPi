@@ -66,7 +66,7 @@ class App(tk.Tk):
         self.path_list = []
         self.output_path = os.getcwd() + "\\output"
         self.data_path = os.getcwd() + "\\data"
-        self.titration_path = os.getcwd() + "\\data_titration"
+        self.titration_path = "C:\\Users\\emmaf\\Documents\\Universite\\Stage T4\\RPi\\data_titration"
         self.create_directories([self.output_path, self.data_path])
 
         self.electrode_list = {}
@@ -86,181 +86,6 @@ class App(tk.Tk):
 
         ################################################# Menu bar #######################################################
 
-        def on_button_file_save_csv():
-            try:
-                self.print('Saving to .csv ...')
-                saving_window = tk.Toplevel(master=self)
-                saving_window.resizable(width=False, height=False)
-                saving_window.title("Saving Options")
-                electrodes_frame = tk.Frame(master=saving_window)
-                parameters_frame = tk.Frame(master=saving_window)
-                titration_frame = tk.Frame(master=parameters_frame)
-                Lovric_frame = tk.Frame(master=parameters_frame)
-                volta_frame = tk.Frame(master=parameters_frame)
-                save_btn_frame = tk.Frame(master=saving_window)
-                saving_window.rowconfigure(0, weight=1)
-                saving_window.rowconfigure(1, weight=1)
-                electrodes_frame.grid(row=0, column=0, sticky="nesw")
-                parameters_frame.grid(row=0, column=1)
-                save_btn_frame.grid(row=1, columnspan=2)
-                elec_lst = {}
-                titration_lst = {}
-                lovric_lst = {}
-                volta_lst = {}
-                first = True
-                tk.Label(master=electrodes_frame, text="Electrodes", font=font1).pack(side=tk.TOP, anchor="n",
-                                                                                      fill=tk.BOTH)
-                if len(self.electrode_list.keys()) != 0:
-                    for (key, value) in self.electrode_list.items():
-                        # packing electrodes
-                        ebtn = ttk.Checkbutton(master=electrodes_frame, text=key, variable=tk.IntVar())
-                        ebtn.state(["selected", "!alternate"])
-                        elec_lst[ebtn] = value
-                        ebtn.pack(side=tk.TOP, anchor="nw")
-                        # packing parameters
-                        for exp in list(self.electrode_list[key].get_experiments()):
-                            if first:
-                                first = False
-                                for (test_type, test) in enumerate(self.electrode_list[key].get_tests(exp).values()):
-                                    if test.type == "Titration":
-                                        tk.Label(master=titration_frame, text="Titration parameters", font=font1).pack(
-                                            side=tk.TOP)
-                                        df = test.get_df()
-                                        if not df.empty:
-                                            for col in df.columns:
-                                                if col not in titration_lst.keys() and col != "time" and col != "frequency" and col != "concentration":
-                                                    pbtn = ttk.Checkbutton(master=titration_frame, text=col,
-                                                                           variable=tk.IntVar())
-                                                    pbtn.state(["selected", "!alternate"])
-                                                    titration_lst[pbtn] = col
-                                                    pbtn.pack(side=tk.TOP, anchor="nw")
-                                    if test.type == "CV":
-                                        tk.Label(master=Lovric_frame, text="Cyclic voltammetry parameters",
-                                                 font=font1).pack(side=tk.TOP)
-                                        if not test.get_df().empty:
-                                            for col in test.get_df().columns:
-                                                if col not in lovric_lst.keys():
-                                                    pbtn = ttk.Checkbutton(master=Lovric_frame, text=col,
-                                                                           variable=tk.IntVar())
-                                                    pbtn.state(["selected", "!alternate"])
-                                                    lovric_lst[pbtn] = col
-                                                    pbtn.pack(side=tk.TOP, anchor="nw")
-                                    if test.type == "SWV":
-                                        tk.Label(master=volta_frame, text="Square wave voltammetry  parameters",
-                                                 font=font1).pack(side=tk.TOP)
-                                        if not test.get_df().empty:
-                                            for col in test.get_df().columns:
-                                                if col not in volta_lst.keys():
-                                                    pbtn = ttk.Checkbutton(master=volta_frame, text=col,
-                                                                           variable=tk.IntVar())
-                                                    pbtn.state(["selected", "!alternate"])
-                                                    volta_lst[pbtn] = col
-                                                    pbtn.pack(side=tk.TOP, anchor="nw")
-                else:
-                    self.print('No data to save')
-                    messagebox.showinfo('Info', 'No data to save')
-
-                if not titration_lst:
-                    tk.Label(master=titration_frame, text="No parameters to show", font=font2).pack(side=tk.TOP,
-                                                                                                    anchor="nw")
-                if not lovric_lst:
-                    tk.Label(master=Lovric_frame, text="No parameters to show", font=font2).pack(side=tk.TOP,
-                                                                                                 anchor="nw")
-                if not volta_lst:
-                    tk.Label(master=volta_frame, text="No parameters to show", font=font2).pack(side=tk.TOP,
-                                                                                                anchor="nw")
-
-                titration_frame.pack(side=tk.TOP, anchor="nw")
-                Lovric_frame.pack(side=tk.TOP, anchor="nw")
-                volta_frame.pack(side=tk.TOP, anchor="nw")
-
-                def on_button_save():
-                    date = datetime.datetime.now().strftime('%Y-%m-%d')
-                    path = f"{self.output_path}\\{date}"
-                    if not os.path.exists(path):
-                        os.makedirs(path)
-
-                    titration_df = None
-                    lovric_df = None
-                    volta_df = None
-                    first_titration = True
-                    first_lovric = True
-                    first_volta = True
-                    for (electrode_chckbtn, electrode_obj) in elec_lst.items():
-                        if "selected" in electrode_chckbtn.state():
-                            for exp in list(electrode_obj.get_experiments()):
-                                for (test_type, test) in enumerate(self.electrode_list[key].get_tests(exp).values()):
-                                    e_name = electrode_obj.name
-                                    if test.type == "Titration":
-                                        if not test.get_df().empty:
-                                            df = test.get_df()
-                                            frequency = list(df["frequency"])[0]
-                                            if first_titration:
-                                                titration_df = df[["time", "concentration"]].copy()
-                                                first_titration = False
-                                            for (chk_btn, p_name) in titration_lst.items():
-                                                if "selected" in chk_btn.state():
-                                                    data = df[[p_name]].copy()
-                                                    data.rename(columns={p_name: f'{p_name}_{e_name}_{frequency}hz'},
-                                                                inplace=True)
-                                                    titration_df = pd.concat([titration_df, data], axis=1)
-
-                                    elif test.type == "CV":
-                                        if not test.get_df().empty:
-                                            df = test.get_df()
-                                            charge = df['peak_current'] / df["frequency"]
-                                            charge.columns = [f'charge_{e_name}']
-                                            if first_lovric:
-                                                lovric_df = df[["time", "frequency"]].copy()
-                                                first_lovric = False
-                                            lovric_df = pd.concat([lovric_df, charge], axis=1)
-                                            for (chk_btn, p_name) in lovric_lst.items():
-                                                if "selected" in chk_btn.state():
-                                                    data = df[[p_name]].copy()
-                                                    data.rename(columns={p_name: f'{p_name}_{e_name}'}, inplace=True)
-                                                    pd.concat(data, charge)
-                                                    lovric_df = pd.concat([lovric_df, data], axis=1)
-
-                                    elif test.type == "SWV":
-                                        if not test.get_df().empty:
-                                            df = test.get_df()
-                                            frequency = list(df["frequency"])[0]
-                                            if first_volta:
-                                                volta_df = df[["time", "concentration"]].copy()
-                                                first_volta = False
-                                            for (chk_btn, p_name) in volta_lst.items():
-                                                if "selected" in chk_btn.state():
-                                                    data = df[[p_name]].copy()
-                                                    data.rename(columns={p_name: f'{p_name}_{e_name}_{frequency}hz'},
-                                                                inplace=True)
-                                                    volta_df = pd.concat([volta_df, data], axis=1)
-                                    else:
-                                        self.print(f"test type {test.type} doen't exist")
-                                    try:
-                                        print(f"{test.type} for {e_name}_{frequency} has been saved")
-                                    except Exception:
-                                        pass
-                    try:
-                        if titration_df is not None:
-                            titration_df.to_csv(path_or_buf=f"{path}\\titration.csv")
-                        if lovric_df is not None:
-                            lovric_df.to_csv(path_or_buf=f"{path}\\lovric.csv")
-                        if volta_df is not None:
-                            volta_df.to_csv(path_or_buf=f"{path}\\voltammogram.csv")
-                    except PermissionError as e:
-                        debug()
-                        messagebox.showerror('Error', e.__str__())
-                    else:
-                        messagebox.showinfo('Info', f"Data has been save to {path}")
-                    saving_window.quit()
-                    saving_window.destroy()
-
-                tk.Button(master=save_btn_frame, text="Save", command=on_button_save).pack(side=tk.TOP, anchor="center")
-
-            except Exception as e:
-                self.print(e)
-                debug()
-                messagebox.showerror('Error', e.__str__())
 
         def on_button_close():  # stop tasks before close the window.
             try:
@@ -282,37 +107,12 @@ class App(tk.Tk):
                 debug()
                 messagebox.showerror('Error', e.__str__())
 
-        def on_button_process_CH_titration():
-            process_CH_File(self, self.data_path, "Titration")
-
-        def on_button_process_CH_Experiment():
-            process_CH_File(self, self.data_path, "SWV")
-
-        def on_button_set_output_path():
-            try:
-                self.print('setting output path ...')
-                dir_name = tk.filedialog.askdirectory(parent=self, title='Choose a folder for .log file')
-                self.output_path = dir_name
-                self.print('Path has been set to ' + dir_name)
-            except Exception as e:
-                self.print(e)
-                debug()
-                messagebox.showerror('Error', e.__str__())
 
         def on_button_Toggle_fit():
             self.isHill = not self.isHill
             self.update_titration_graph = True
             self.to_update_plots = True
 
-        def on_button_about():
-            try:
-                self.print('Opening About file ...')
-                filename = os.getcwd() + '\\README.md'
-                os.startfile(filename)
-            except Exception as e:
-                self.print(e)
-                debug()
-                messagebox.showerror('Error', e.__str__())
 
         def keyPressed(event):
             try:
@@ -330,29 +130,10 @@ class App(tk.Tk):
 
         menubar = tk.Menu(self)
 
-        filemenu = tk.Menu(menubar, tearoff=0)
-        # filemenu.add_command(label="Load old experiments", command=on_button_load_exp)
-        filemenu.add_command(label="Save to .csv", command=on_button_file_save_csv)
-
-        filemenu.add_command(label="Exit", command=on_button_close)
-        menubar.add_cascade(label="File", menu=filemenu)
-
-        calib_menu = tk.Menu(menubar, tearoff=0)
-        calib_menu.add_command(label='Process Titration', command=on_button_process_CH_titration)
-        calib_menu.add_command(label='Process Experiment', command=on_button_process_CH_Experiment)
-        menubar.add_cascade(label="Load CH data", menu=calib_menu)
-
-        serialmenu = tk.Menu(menubar, tearoff=0)
-        serialmenu.add_command(label="Change Output filepath", command=on_button_set_output_path)
-        menubar.add_cascade(label="Tests", menu=serialmenu)
-
         Graphmenu = tk.Menu(menubar, tearoff=0)
         Graphmenu.add_command(label="Toggle Hill/Linear fit", command=on_button_Toggle_fit)
         menubar.add_cascade(label="Graph", menu=Graphmenu)
 
-        helpmenu = tk.Menu(menubar, tearoff=0)
-        helpmenu.add_command(label="About...", command=on_button_about)
-        menubar.add_cascade(label="Help", menu=helpmenu)
 
         self.config(menu=menubar)
 
@@ -361,7 +142,6 @@ class App(tk.Tk):
         ###############################################################################################################
         self.protocol("WM_DELETE_WINDOW", on_button_close)  # the red x button
         self.wm_title("SwiftMote")
-        self.iconbitmap('ico/SwiftLogo.ico')
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
         self.geometry(f"{screen_width}x{screen_height - 100}+1-43")  # the size of the GUI
@@ -400,45 +180,28 @@ class App(tk.Tk):
         self.option_cbox_values = {}
         self.graph_values = {}
         self.calib_data_dict = {}
-        frameCommConnection = tk.Frame(master=master,
-                                       highlightbackground="black",
-                                       highlightthickness=1,
-                                       width=self.winfo_width()
-                                       )  # div
 
         ############################ Serial Device selection #############################################
+        #
+        # def refresh_Serial_devices():
+        #     try:
+        #         serial_devices_list = serial.tools.list_ports.comports()
+        #         ports = []
+        #         for port, _, _ in sorted(serial_devices_list):
+        #             ports.append(port)
+        #
+        #         if ports:
+        #             self.comport_cbox["state"] = "readonly"
+        #             self.comport_cbox['values'] = ports
+        #     except Exception as e:
+        #         self.print(e)
+        #         debug()
+        #         messagebox.showerror('Error', 'No serial devices connected to scan for devices\n\n' + e.__str__())
+        #
+        # def apply_selected_Serial_device(event):
+        #     pass
+        #     self.tasks["Serial"] = loop.create_task(self.register_data_callbacks_serial(interval=5), name="Serial")
 
-        tk.Label(master=frameCommConnection, text="Select Serial port", font=font1).pack(side=tk.TOP)
-
-        def refresh_Serial_devices():
-            try:
-                serial_devices_list = serial.tools.list_ports.comports()
-                ports = []
-                for port, _, _ in sorted(serial_devices_list):
-                    ports.append(port)
-
-                if ports:
-                    self.comport_cbox["state"] = "readonly"
-                    self.comport_cbox['values'] = ports
-            except Exception as e:
-                self.print(e)
-                debug()
-                messagebox.showerror('Error', 'No serial devices connected to scan for devices\n\n' + e.__str__())
-
-        def apply_selected_Serial_device(event):
-            pass
-            self.tasks["Serial"] = loop.create_task(self.register_data_callbacks_serial(interval=5), name="Serial")
-
-        self.comport = tk.StringVar()
-        self.comport_cbox = tk.ttk.Combobox(master=frameCommConnection,
-                                            values=[],
-                                            textvariable=self.comport,
-                                            postcommand=refresh_Serial_devices,
-                                            width=40,
-                                            state="readonly",
-                                            )
-        self.comport_cbox.bind('<<ComboboxSelected>>', apply_selected_Serial_device)
-        self.comport_cbox.pack(side=tk.TOP, fill=tk.X)
 
         ############################ Frame init for data control #############################################
 
@@ -524,12 +287,10 @@ class App(tk.Tk):
             with open(f"{self.data_path}\\{name}", "rb") as f:
                 self.electrode_list[name] = pickle.load(f)
 
-
         def load_titration(name):
             self.update_titration_graph = True
             with open(f"{self.titration_path}\\{name}", "rb") as f:
                 self.titration_list[name] = pickle.load(f)
-
 
         def set_electrode(event):
             electrode_name = self.Electrode_cBox.get()
@@ -547,7 +308,6 @@ class App(tk.Tk):
             add_experiment_btn['state'] = "active"
             del_experiment_btn['state'] = "active"
             save_titration_btn['state'] = "active"
-
 
         def set_new_electrode():
             electrode_name = self.Electrode_cBox.get()
@@ -572,9 +332,34 @@ class App(tk.Tk):
             else:
                 self.electrode_list[name] = Electrode(name)
                 self.electrode_list[name].save(self.data_path)
-                self.print(f"{name} created successfully")
                 self.Electrode_cBox.set(self.electrode_list[name].name)
                 set_new_electrode()
+
+        def start_electrode():
+            base_name = "electrode"
+            number = 0
+            while os.path.isfile(
+                    f"{self.data_path}\\{base_name}_{number}"):
+                number += 1
+            name = f"{base_name}_{number}"
+            self.Electrode_cBox.set(name)
+            add_electrode()
+            electrode_name = self.Electrode_cBox.get()
+            # if electrode_name not in self.electrode_list.keys():
+            #     load_electrode(electrode_name)
+            load_electrode(electrode_name)
+            self.current_electrode = self.electrode_list[electrode_name]
+            self.Experiment_cBox['state'] = "active"
+            self.Experiment_cBox.set("")
+            self.titration_df = None
+            self.test_cBox.set("")
+            self.latest_volta_btn["state"] = "disabled"
+            self.raw_data_df = None
+            self.to_update_plots = True
+            add_experiment_btn['state'] = "active"
+            del_experiment_btn['state'] = "active"
+            save_titration_btn['state'] = "active"
+
 
         # ############################# Experiment selection from selected Electrode ######################################################
         def update_experience_list():
@@ -598,12 +383,37 @@ class App(tk.Tk):
                                        command=lambda: save_titration())
         save_titration_btn.pack(side=tk.TOP, fill=tk.X)
 
+
+
         # ############################# Titration selection from file ######################################################
         def update_titration_list():
             titr_list = list(os.listdir(f"{self.titration_path}"))
             self.Titration_cBox['values'] = titr_list
 
         def set_titration(event):
+            file_name = self.Titration_cBox.get()
+            match = re.match(r"^(.*)\((.*)\)\.csv$", file_name)
+            if match:
+                electrode_name = match.group(1)
+                titration_name = match.group(2)
+            else:
+                titration_name = file_name
+            self.titration_df = None
+            if file_name:
+                load_titration(titration_name)
+                self.current_titration = self.titration_list[file_name]
+                self.titration_df = self.current_titration.get_df().sort_values(by=["concentration"])
+                if self.plots.prev_min_pt is None:
+                    self.plots.min_pt = list(self.titration_df["concentration"])[0]
+                    self.plots.max_pt = list(self.titration_df["concentration"])[-1]
+                # self.test_cBox.set("")
+                # self.latest_volta_btn["state"] = "disabled"
+                # self.raw_data_df = None
+                self.to_update_plots = True
+            pass
+
+        def force_set_titration():
+            self.Titration_cBox.set("test")
             file_name = self.Titration_cBox.get()
             match = re.match(r"^(.*)\((.*)\)\.csv$", file_name)
             if match:
@@ -695,6 +505,35 @@ class App(tk.Tk):
                     self.Titration_cBox['state'] = 'active'
             self.to_update_plots = True
 
+        def start_experiment():
+            self.titration_df = None
+            base_name = "experiment"
+            number = 0
+            while os.path.isfile(
+                    f"{self.data_path}\\{base_name}_{number}"):
+                number += 1
+            name = f"{base_name}_{number}"
+            self.Experiment_cBox.set(name)
+            experiment_name = self.Experiment_cBox.get()
+            add_experiment()
+            if experiment_name not in self.current_electrode.get_experiments():
+                self.print(f"{experiment_name} doesn't exist")
+            else:
+                self.test_cBox['state'] = 'active'
+                create_titration_btn["state"] = 'active'
+                create_Lovric_btn["state"] = 'active'
+                create_Volta_btn["state"] = 'active'
+                self.test_cBox.event_generate('<<ComboboxSelected>>')
+                if self.current_electrode.get_tests(experiment_name)["Titration"].get_df().shape[0] > 0:
+                    self.titration_df = self.current_electrode.get_tests(experiment_name)["Titration"].get_df().sort_values(by=["concentration"])
+                    self.plots.min_pt = list(self.titration_df["concentration"])[0]
+                    self.plots.max_pt = list(self.titration_df["concentration"])[-1]
+                    self.update_titration_graph = True
+                    self.Titration_cBox['state'] = 'disabled'
+                else:
+                    self.Titration_cBox['state'] = 'active'
+            self.to_update_plots = True
+
         frameExperiment.pack(side=tk.TOP, fill=tk.BOTH, expand=False)
 
         # ############################# Experiment type selection from selected Experiment ######################################################
@@ -721,6 +560,8 @@ class App(tk.Tk):
         self.test_cBox.bind('<<ComboboxSelected>>', lambda event: set_test_graph(event))
         self.test_cBox.pack(side=tk.TOP, fill=tk.X)
         frameExpType.pack(side=tk.TOP, fill=tk.BOTH, expand=False)
+
+
 
         def set_test_graph(event):
             if self.test_cBox.get() != "":
@@ -891,6 +732,8 @@ class App(tk.Tk):
 
         def Create_SWV():
             Update_test_variable_frame(self.current_electrode.get_tests(self.Experiment_cBox.get())["SWV"])
+        def Force_Create_SWV():
+            Update_test_variable_frame(self.current_electrode.get_tests(self.Experiment_cBox.get())["SWV"])
 
         def run_test_thread(test, comport):
             self.thread_result = test.run_test(comport, 115200)
@@ -921,12 +764,14 @@ class App(tk.Tk):
             self.volta_slider.set(len(test.get_df()) + 1)
 
         def run_test(test: Test):
+            self.test_runned = True
             try:
                 self.thread_result == -1
                 self.data_received = False
                 param = dict([(p[0], p[1].get()) for p in self.test_params.items()])
                 test.update_param(param)
-                comport = self.comport_cbox.get()
+                ## ajout comm8
+                comport = "COM8"
                 threading.Thread(target=run_test_thread, args=(test, comport)).start()
                 handle_test_results_delayed(test)
             except Exception as e:
@@ -958,6 +803,8 @@ class App(tk.Tk):
         frameTest_params_params.pack(side=tk.TOP, fill=tk.BOTH, expand=False)
         frameTest_params_btn.pack(side=tk.TOP, fill=tk.BOTH, expand=False)
 
+        ###Ajout
+        start_electrode()
         ######################################## Info screen params ########################################################################
         def on_button_clear_info():
             self.info_screen.config(state='normal')
@@ -988,12 +835,19 @@ class App(tk.Tk):
         self.info_screen.pack(side=tk.LEFT, fill=tk.BOTH)
 
         ################################################################################################################
-        frameCommConnection.pack(side=tk.TOP, fill=tk.BOTH, expand=False)
         frameElectrode.pack(side=tk.TOP, fill=tk.BOTH, expand=False)
         frameTest_params.pack(side=tk.TOP, fill=tk.BOTH, expand=False)
         frameTestVariables.pack(side=tk.TOP, fill=tk.BOTH, expand=False)
         frameControlsInfo.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         ################################################################################################################
+        ###AJOUT
+        start_experiment()
+        force_set_titration()
+        Force_Create_SWV()
+        test = self.current_electrode.get_tests(self.Experiment_cBox.get())["SWV"]
+        time.sleep(5)
+        run_test(test)
+
 
     async def register_data_callbacks_bleak(self):
         """Sets up notifications using Bleak, and attaches callbacks"""

@@ -10,14 +10,12 @@ class Plot():
     prev_min_pt = None
     prev_max_pt = None
 
-    def __init__(self,master,frame):
+    def __init__(self):
         """Initializes plots
                 param self: reference to parent object
                 """
-        self.master = master
         self.min_pt = 10000
         self.max_pt = -10000
-
 
         plt.rcParams['axes.grid'] = True  # enables all grid lines globally
 
@@ -82,73 +80,73 @@ class Plot():
         self.rt_concentration.set_ylabel("Concentration (mol/L)")
         #####################################################################################################################################################
 
-        frame_plots = tk.Frame(master=frame)
-        frame_controls = tk.Frame(master=frame)
-        frame_slider = tk.Frame(master=frame_controls)
-        frame_toolbar = tk.Frame(master=frame_controls)
+        # frame_plots = tk.Frame(master=frame)
+        # frame_controls = tk.Frame(master=frame)
+        # frame_slider = tk.Frame(master=frame_controls)
+        # frame_toolbar = tk.Frame(master=frame_controls)
+        #
+        # self.canvas = FigureCanvasTkAgg(self.fig, master=frame_plots)  # A tk.DrawingArea.
+        # self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        # self.toolbar = NavigationToolbar2Tk(canvas=self.canvas, window=frame_toolbar, pack_toolbar=False)
 
-        self.canvas = FigureCanvasTkAgg(self.fig, master=frame_plots)  # A tk.DrawingArea.
-        self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-        self.toolbar = NavigationToolbar2Tk(canvas=self.canvas, window=frame_toolbar, pack_toolbar=False)
+        # # remove some buttons at the bottom of the plot part of the window
+        # self.toolbar.toolitems = (('Pan', 'Left button pans, Right button zooms\nx/y fixes axis, CTRL fixes aspect', 'move', 'pan'),
+        #                           ('Zoom', 'Zoom to rectangle\nx/y fixes axis', 'zoom_to_rect', 'zoom'),
+        #                           ('Save', 'Save the figure', 'filesave', 'save_figure'))
 
-        # remove some buttons at the bottom of the plot part of the window
-        self.toolbar.toolitems = (('Pan', 'Left button pans, Right button zooms\nx/y fixes axis, CTRL fixes aspect', 'move', 'pan'),
-                                  ('Zoom', 'Zoom to rectangle\nx/y fixes axis', 'zoom_to_rect', 'zoom'),
-                                  ('Save', 'Save the figure', 'filesave', 'save_figure'))
+        # # Reinitialize the toolbar to apply button changes. This is a bit of a hack. Change if there is a better way.
+        # self.toolbar.__init__(canvas=self.canvas,
+        #                       window=frame_toolbar,
+        #                       pack_toolbar=False
+        #                       )
+        # self.toolbar.pack(side=tk.LEFT, fill=tk.BOTH, expand=False, padx=5)
 
-        # Reinitialize the toolbar to apply button changes. This is a bit of a hack. Change if there is a better way.
-        self.toolbar.__init__(canvas=self.canvas,
-                              window=frame_toolbar,
-                              pack_toolbar=False
-                              )
-        self.toolbar.pack(side=tk.LEFT, fill=tk.BOTH, expand=False, padx=5)
-
-        def onclick(event):
-            try:
-                if event.inaxes is not None:
-                    if event.inaxes is self.titration:
-                        if master.titration_df is not None:
-                            x = event.xdata
-                            concentrations = (self.titration_data["titration"].get_data())[0]
-                            mid_val = np.median(concentrations)
-                            minimum = {_conc: abs(_conc - x) for _conc in concentrations}
-                            values = list(minimum.values())
-                            min_val = np.min(list(minimum.values()))
-                            conc_ = list(minimum.keys())[values.index(min_val)]
-                            if x <= mid_val:
-                                self.min_pt = conc_
-                            else:
-                                self.max_pt = conc_
-
-                            print("Updating range")
-                            Plot.prev_min_pt = self.min_pt
-                            Plot.prev_max_pt = self.max_pt
-
-                        master.update_titration_graph = True
-                        master.to_update_plots = True
-            except Exception as e:
-                debug()
-
-        self.canvas.mpl_connect('button_press_event', onclick)
-
-        def apply_tight_layout(event: tk.Event):
-            """when resize the whole window, the plot part of the window is resized """
-            try:
-                if str(event.widget) == ".!frame.!frame.!canvas":
-                    self.fig.tight_layout()
-            except Exception as e:
-                master.print(e)
-                pass
-
-        master.bind("<Configure>", apply_tight_layout)  # resize plots when window size changes, "Configure" comes from tk
-
-        frame_plots.pack(side=tk.TOP, fill=tk.BOTH, expand=True, anchor='center')
-        frame_controls.pack(side=tk.TOP, fill=tk.BOTH, expand=False, anchor='center')
-        frame_controls.grid_columnconfigure(0, weight=1, uniform="group1")
-        frame_controls.grid_columnconfigure(1, weight=1, uniform="group1")
-        frame_controls.grid_rowconfigure(0, weight=1)
-        frame_toolbar.grid(row=0, column=0, sticky="nsew", rowspan=2)
-        frame_slider.grid(row=0, column=1, sticky="ns")
+        # def onclick(event):
+        #     try:
+        #         if event.inaxes is not None:
+        #             if event.inaxes is self.titration:
+        #                 if master.titration_df is not None:
+        #                     x = event.xdata
+        #                     concentrations = (self.titration_data["titration"].get_data())[0]
+        #                     mid_val = np.median(concentrations)
+        #                     minimum = {_conc: abs(_conc - x) for _conc in concentrations}
+        #                     values = list(minimum.values())
+        #                     min_val = np.min(list(minimum.values()))
+        #                     conc_ = list(minimum.keys())[values.index(min_val)]
+        #                     if x <= mid_val:
+        #                         self.min_pt = conc_
+        #                     else:
+        #                         self.max_pt = conc_
+        #
+        #                     print("Updating range")
+        #                     Plot.prev_min_pt = self.min_pt
+        #                     Plot.prev_max_pt = self.max_pt
+        #
+        #                 master.update_titration_graph = True
+        #                 master.to_update_plots = True
+        #     except Exception as e:
+        #         debug()
+        #
+        # self.canvas.mpl_connect('button_press_event', onclick)
+        #
+        # def apply_tight_layout(event: tk.Event):
+        #     """when resize the whole window, the plot part of the window is resized """
+        #     try:
+        #         if str(event.widget) == ".!frame.!frame.!canvas":
+        #             self.fig.tight_layout()
+        #     except Exception as e:
+        #         master.print(e)
+        #         pass
+        #
+        # master.bind("<Configure>", apply_tight_layout)  # resize plots when window size changes, "Configure" comes from tk
+        #
+        # frame_plots.pack(side=tk.TOP, fill=tk.BOTH, expand=True, anchor='center')
+        # frame_controls.pack(side=tk.TOP, fill=tk.BOTH, expand=False, anchor='center')
+        # frame_controls.grid_columnconfigure(0, weight=1, uniform="group1")
+        # frame_controls.grid_columnconfigure(1, weight=1, uniform="group1")
+        # frame_controls.grid_rowconfigure(0, weight=1)
+        # frame_toolbar.grid(row=0, column=0, sticky="nsew", rowspan=2)
+        # frame_slider.grid(row=0, column=1, sticky="ns")
 
     def reset_titration_graph(self):
         self.titration_data["titration"].set_data([], [])

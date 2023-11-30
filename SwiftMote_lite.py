@@ -7,7 +7,7 @@ import warnings
 import time
 import threading
 import re
-
+https://www.samwestby.com/tutorials/rpi-pyenv
 import bleak
 import matplotlib
 import nest_asyncio
